@@ -1,0 +1,160 @@
+---
+interface Props {
+	action: string;
+	method: 'POST' | 'PATCH';
+	initial?: {
+		title?: string;
+		slug?: string;
+		description?: string;
+		body?: string;
+		published?: boolean;
+	};
+	submitLabel: string;
+}
+
+const { action, method, initial = {}, submitLabel } = Astro.props;
+---
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css" />
+
+<form id="post-form" data-action={action} data-method={method}>
+	<label>
+		Title
+		<input name="title" required maxlength="200" value={initial.title ?? ''} />
+	</label>
+
+	<label>
+		Slug
+		<input
+			name="slug"
+			required
+			pattern="^[a-z0-9]+(?:-[a-z0-9]+)*$"
+			value={initial.slug ?? ''}
+		/>
+		<small>lowercase letters, numbers, and dashes</small>
+	</label>
+
+	<label>
+		Description
+		<input name="description" required maxlength="500" value={initial.description ?? ''} />
+	</label>
+
+	<label>
+		Body
+		<textarea id="post-body" name="body" required rows="20">{initial.body ?? ''}</textarea>
+	</label>
+
+	<label>
+		<input type="checkbox" name="published" value="on" checked={initial.published ?? false} />
+		Published
+	</label>
+
+	<button type="submit">{submitLabel}</button>
+	<p id="post-error" role="alert" hidden></p>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js" defer></script>
+
+<script is:inline define:vars={{ initialSlug: initial.slug ?? '' }}>
+	function slugify(s) {
+		return s
+			.toLowerCase()
+			.normalize('NFKD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-+|-+$/g, '')
+			.slice(0, 80);
+	}
+
+	window.addEventListener('DOMContentLoaded', () => {
+		const form = document.getElementById('post-form');
+		if (!form) return;
+		const title = form.querySelector('input[name="title"]');
+		const slug = form.querySelector('input[name="slug"]');
+		const errEl = document.getElementById('post-error');
+
+		let slugTouched = Boolean(initialSlug);
+		slug.addEventListener('input', () => {
+			slugTouched = true;
+		});
+		title.addEventListener('input', () => {
+			if (!slugTouched) slug.value = slugify(title.value);
+		});
+
+		if (window.EasyMDE) {
+			new window.EasyMDE({
+				element: document.getElementById('post-body'),
+				spellChecker: false,
+				autosave: {
+					enabled: true,
+					uniqueId: 'post-draft-' + (form.dataset.action || 'new'),
+					delay: 1000,
+				},
+				minHeight: '300px',
+			});
+		}
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			errEl.hidden = true;
+			errEl.textContent = '';
+
+			const fd = new FormData(form);
+			if (!fd.has('published')) fd.set('published', 'false');
+
+			const res = await fetch(form.dataset.action, {
+				method: form.dataset.method,
+				body: fd,
+			});
+
+			if (res.redirected) {
+				window.location.href = res.url;
+				return;
+			}
+			if (res.ok) {
+				window.location.href = '/admin';
+				return;
+			}
+
+			let msg = 'Failed to save.';
+			try {
+				const data = await res.json();
+				if (data.error) msg = data.error;
+			} catch {}
+			errEl.textContent = msg;
+			errEl.hidden = false;
+		});
+	});
+</script>
+
+<style>
+	form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	form label {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+	form input[type='text'],
+	form input:not([type]),
+	form input[type='password'] {
+		padding: 0.5rem 0.6rem;
+		font-size: 1rem;
+	}
+	form textarea {
+		padding: 0.5rem 0.6rem;
+		font-family: ui-monospace, monospace;
+		font-size: 0.95rem;
+	}
+	#post-error {
+		background: #fee;
+		border: 1px solid #f99;
+		padding: 0.5rem 0.75rem;
+	}
+	small {
+		color: #666;
+	}
+</style>
