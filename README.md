@@ -1,63 +1,83 @@
-# Astro Starter Kit: Blog
+# mydiary
 
-```sh
-npm create astro@latest -- --template blog
-```
+Blog pribadi sederhana dibangun dengan [Astro](https://astro.build). Konten ditulis dalam Markdown, di-render statis, siap deploy ke Netlify atau Vercel.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Fitur
 
-Features:
+- Daftar post di halaman utama (`/`)
+- Halaman detail per-post (`/blog/[slug]`)
+- Syntax highlighting via Shiki (bawaan Astro)
+- SEO tags, Open Graph, sitemap, RSS feed
+- 100% statis, cepat, tanpa server runtime
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
+## Struktur
 
 ```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
+src/
+├── content/
+│   └── blog/           # tulis post di sini (.md / .mdx)
+├── pages/              # routing berbasis file
+├── layouts/            # layout Astro
+├── components/         # komponen UI
+└── content.config.ts   # schema frontmatter (title, description, pubDate, heroImage?, updatedDate?)
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Menulis Post Baru
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Tambahkan file `.md` di `src/content/blog/`. Contoh minimal:
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+```markdown
+---
+title: 'Judul Post'
+description: 'Ringkasan singkat.'
+pubDate: 'Aug 28 2026'
+---
 
-Any static assets, like images, can be placed in the `public/` directory.
+Isi post dalam Markdown.
 
-## 🧞 Commands
+## Sub-bagian
 
-All commands are run from the root of the project, from a terminal:
+Blok kode dengan syntax highlighting otomatis:
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+    ```js
+    console.log('halo');
+    ```
+```
 
-## 👀 Want to learn more?
+Frontmatter wajib: `title`, `description`, `pubDate`. Opsional: `heroImage` (path relatif ke gambar di `src/assets/`), `updatedDate`.
 
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+## Perintah
 
-## Credit
+Jalankan dari root proyek:
 
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+| Perintah              | Aksi                                        |
+| :-------------------- | :------------------------------------------ |
+| `npm install`         | Install dependencies                        |
+| `npm run dev`         | Server dev di `http://localhost:4321`       |
+| `npm run build`       | Build ke `./dist/`                          |
+| `npm run preview`     | Preview hasil build sebelum deploy          |
+
+## Deploy
+
+### Netlify
+
+Sudah ada `netlify.toml`. Cukup:
+
+1. Push repo ke GitHub/GitLab.
+2. Di Netlify dashboard: **Add new site** → **Import an existing project** → pilih repo.
+3. Netlify auto-detect config dari `netlify.toml` (build: `npm run build`, publish: `dist`, Node 20).
+4. Deploy.
+
+### Vercel
+
+1. Push repo ke GitHub/GitLab.
+2. Di Vercel dashboard: **Add New Project** → import repo.
+3. Framework Preset: **Astro** (auto-detect). Build command dan output dir sudah benar.
+4. Deploy.
+
+## Tech Stack
+
+- [Astro](https://astro.build) — static site generator
+- Markdown / MDX untuk konten
+- Shiki untuk syntax highlighting
+- Node.js 20+
