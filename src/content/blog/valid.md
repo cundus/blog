@@ -1,5 +1,6 @@
 ---
 title: 'Valid?'
+description: ''
 pubDate: 'Aug 28 2026'
 # heroImage: '../../assets/blog-placeholder-2.jpg'
 ---
