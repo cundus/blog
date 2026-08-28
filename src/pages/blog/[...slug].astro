@@ -1,20 +1,36 @@
 ---
-import { type CollectionEntry, getCollection, render } from 'astro:content';
+import { render } from 'astro:content';
 import BlogPost from '../../layouts/BlogPost.astro';
+import { getPostBySlug } from '../../lib/posts';
+import { markdownToSafeHtml } from '../../lib/markdown';
 
-export async function getStaticPaths() {
-	const posts = await getCollection('blog');
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: post,
-	}));
+export const prerender = false;
+
+const { slug } = Astro.params;
+if (!slug) return Astro.rewrite('/404');
+
+const post = await getPostBySlug(Array.isArray(slug) ? slug.join('/') : slug);
+if (!post) return Astro.rewrite('/404');
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=60, s-maxage=60');
+
+let Content: any = null;
+let html: string | null = null;
+if (post.source === 'markdown' && post.entry) {
+	const rendered = await render(post.entry);
+	Content = rendered.Content;
+} else {
+	html = await markdownToSafeHtml(post.body);
 }
-type Props = CollectionEntry<'blog'>;
-
-const post = Astro.props;
-const { Content } = await render(post);
 ---
 
-<BlogPost {...post.data}>
-	<Content />
+<BlogPost
+	title={post.title}
+	description={post.description}
+	pubDate={post.pubDate}
+	updatedDate={post.updatedDate}
+	heroImage={post.heroImage as any}
+>
+	{Content && <Content />}
+	{html && <Fragment set:html={html} />}
 </BlogPost>
