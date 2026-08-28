@@ -1,0 +1,31 @@
+---
+import AdminShell from '../../../components/AdminShell.astro';
+import PostForm from '../../../components/PostForm.astro';
+import { db } from '../../../db/client';
+import { posts } from '../../../db/schema';
+import { eq } from 'drizzle-orm';
+
+export const prerender = false;
+
+const id = Astro.params.id;
+if (!id) return Astro.rewrite('/404');
+
+const rows = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
+const row = rows[0];
+if (!row) return Astro.rewrite('/404');
+---
+
+<AdminShell title={`Edit: ${row.title}`}>
+  <PostForm
+    action={`/api/posts/${row.id}`}
+    method="PATCH"
+    initial={{
+      title: row.title,
+      slug: row.slug,
+      description: row.description,
+      body: row.body,
+      published: row.published,
+    }}
+    submitLabel="Save"
+  />
+</AdminShell>

@@ -1,0 +1,10 @@
+---
+import AdminShell from '../../components/AdminShell.astro';
+import PostForm from '../../components/PostForm.astro';
+
+export const prerender = false;
+---
+
+<AdminShell title="New post">
+  <PostForm action="/api/posts" method="POST" submitLabel="Create" />
+</AdminShell>
