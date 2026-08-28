@@ -1,0 +1,114 @@
+---
+import AdminShell from '../../components/AdminShell.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import { db } from '../../db/client';
+import { posts } from '../../db/schema';
+import { desc } from 'drizzle-orm';
+
+export const prerender = false;
+
+const rows = await db.select().from(posts).orderBy(desc(posts.createdAt));
+---
+
+<AdminShell title="Posts">
+	{rows.length === 0 && <p>No posts yet. <a href="/admin/new">Create one</a>.</p>}
+
+	{rows.length > 0 && (
+		<table>
+			<thead>
+				<tr>
+					<th>Title</th>
+					<th>Slug</th>
+					<th>Status</th>
+					<th>Published date</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{rows.map((p) => (
+					<tr data-id={p.id}>
+						<td>{p.title}</td>
+						<td><code>{p.slug}</code></td>
+						<td>
+							{p.published
+								? <span class="badge published">Published</span>
+								: <span class="badge draft">Draft</span>}
+						</td>
+						<td><FormattedDate date={p.pubDate} /></td>
+						<td class="actions">
+							<a href={`/admin/edit/${p.id}`}>Edit</a>
+							<button
+								type="button"
+								data-action="toggle"
+								data-id={p.id}
+								data-published={String(p.published)}
+							>
+								{p.published ? 'Unpublish' : 'Publish'}
+							</button>
+							<button type="button" data-action="delete" data-id={p.id}>Delete</button>
+						</td>
+					</tr>
+				))}
+			</tbody>
+		</table>
+	)}
+</AdminShell>
+
+<script>
+	document.addEventListener('click', async (event) => {
+		const target = event.target as HTMLElement | null;
+		const btn = target?.closest('button[data-action]') as HTMLButtonElement | null;
+		if (!btn) return;
+
+		const id = btn.dataset.id;
+		const action = btn.dataset.action;
+		if (!id || !action) return;
+
+		if (action === 'toggle') {
+			const published = btn.dataset.published === 'true';
+			const form = new FormData();
+			form.set('published', published ? 'false' : 'true');
+			const res = await fetch(`/api/posts/${id}`, { method: 'PATCH', body: form });
+			if (res.redirected || res.ok) location.reload();
+			else alert('Failed to toggle');
+		}
+
+		if (action === 'delete') {
+			if (!confirm('Delete this post permanently?')) return;
+			const res = await fetch(`/api/posts/${id}`, { method: 'DELETE' });
+			if (res.ok) btn.closest('tr')?.remove();
+			else alert('Failed to delete');
+		}
+	});
+</script>
+
+<style>
+	table {
+		width: 100%;
+		border-collapse: collapse;
+	}
+	th,
+	td {
+		text-align: left;
+		padding: 0.5rem 0.6rem;
+		border-bottom: 1px solid #eee;
+	}
+	.actions {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+	.badge {
+		padding: 0.15rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.8rem;
+	}
+	.badge.published {
+		background: #dfd;
+		color: #060;
+	}
+	.badge.draft {
+		background: #eee;
+		color: #666;
+	}
+</style>

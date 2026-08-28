@@ -1,0 +1,55 @@
+---
+import BaseHead from './BaseHead.astro';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<BaseHead title={`${title} · Admin`} description="Admin console" />
+	</head>
+	<body>
+		<header class="admin-nav">
+			<a href="/admin"><strong>Admin</strong></a>
+			<nav>
+				<a href="/admin/new">+ New Post</a>
+				<form method="POST" action="/api/auth/logout" style="display:inline">
+					<button type="submit">Logout</button>
+				</form>
+			</nav>
+		</header>
+		<main>
+			<h1>{title}</h1>
+			<slot />
+		</main>
+
+		<style>
+			.admin-nav {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 1rem 1.5rem;
+				border-bottom: 1px solid #e5e5e5;
+			}
+			.admin-nav nav {
+				display: flex;
+				gap: 1rem;
+				align-items: center;
+			}
+			main {
+				max-width: 900px;
+				margin: 2rem auto;
+				padding: 0 1.5rem;
+			}
+			button {
+				cursor: pointer;
+				padding: 0.4rem 0.8rem;
+			}
+		</style>
+	</body>
+</html>
