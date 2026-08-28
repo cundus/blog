@@ -81,3 +81,17 @@ Sudah ada `netlify.toml`. Cukup:
 - Markdown / MDX untuk konten
 - Shiki untuk syntax highlighting
 - Node.js 20+
+
+## Deployment (Live Blog Editing)
+
+Fitur admin (`/admin/*` + `/api/*`) butuh Postgres + env vars di Netlify:
+
+1. Di Netlify site settings → **Environment variables**, tambahkan:
+   - `DATABASE_URL` — direct `postgres://` URL untuk database Postgres 14+
+   - `ADMIN_PASSWORD_HASH` — bcrypt hash dari `node scripts/hash-password.mjs "your password"`
+   - `SESSION_SECRET` — `openssl rand -base64 32`
+2. Jalankan migrasi manual sebelum deploy pertama dan setiap kali schema berubah:
+   ```bash
+   DATABASE_URL="postgres://..." npx drizzle-kit migrate
+   ```
+3. Deploy. Buka `/admin/login` untuk sign in.
